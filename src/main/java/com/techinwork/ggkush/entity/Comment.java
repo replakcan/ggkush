@@ -16,6 +16,7 @@ import java.util.Date;
 @Entity
 @Table(name = "comment", schema = "ggkush")
 public class Comment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,7 +25,7 @@ public class Comment {
     private String text;
 
     @Column(name = "votes")
-    private Integer votes;
+    private int votes;
 
     @CreatedDate
     @Column(name = "created_at")

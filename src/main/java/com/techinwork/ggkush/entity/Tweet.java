@@ -1,5 +1,6 @@
 package com.techinwork.ggkush.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,7 @@ import java.util.List;
 @Entity
 @Table(name = "tweet", schema = "ggkush")
 public class Tweet {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,7 +27,7 @@ public class Tweet {
     private String text;
 
     @Column(name = "votes")
-    private Integer votes;
+    private int votes;
 
     @CreatedDate
     @Column(name = "created_at")
@@ -36,6 +38,7 @@ public class Tweet {
     private LocalDateTime updatedAt;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "tweet")
+    @JsonIgnore
     private List<Comment> comments;
 
     @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})

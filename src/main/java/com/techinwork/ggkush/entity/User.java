@@ -1,5 +1,6 @@
 package com.techinwork.ggkush.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "user", schema = "ggkush")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,5 +32,6 @@ public class User {
     private Integer age;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-    private List<Tweet> tweet;
+    @JsonIgnore
+    private List<Tweet> tweets;
 }
