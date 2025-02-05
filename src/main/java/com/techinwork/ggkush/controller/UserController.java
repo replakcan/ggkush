@@ -12,12 +12,14 @@ import com.techinwork.ggkush.service.UserInteractionService;
 import com.techinwork.ggkush.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 // TODO [Alper] change return values with response records
 
+@Validated
 @AllArgsConstructor
 @RestController
 @RequestMapping("/users")

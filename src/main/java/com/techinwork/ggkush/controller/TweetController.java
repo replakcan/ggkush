@@ -5,6 +5,7 @@ import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.service.CommentService;
 import com.techinwork.ggkush.service.TweetService;
 import lombok.AllArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,9 +24,13 @@ public class TweetController {
     }
 
     @PostMapping("/{tweetId}/comments")
-    public Comment addCommentByTweetId(@PathVariable("tweetId")Long tweetId, @RequestBody Comment comment) {
+    public Comment addCommentByTweetId(@PathVariable("tweetId")Long tweetId, @RequestBody String text) {
         Tweet tweet = this.tweetService.findById(tweetId);
         List<Comment> comments = tweet.getComments();
+
+        Comment comment = new Comment();
+        comment.setText(text);
+        comment.setTweet(tweet);
 
         comments.add(comment);
         this.commentService.save(comment);
