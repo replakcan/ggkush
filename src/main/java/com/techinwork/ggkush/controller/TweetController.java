@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO [Alper] Same person shouldn't be able to like a tweet more than once
-// TODO [Alper] Same person shouldn't be able to dislike a tweet more than once
-
 @AllArgsConstructor
 @RestController
 @RequestMapping("/tweets")
@@ -25,21 +22,14 @@ public class TweetController {
         return this.tweetService.findAll();
     }
 
-    @DeleteMapping("/{tweetId}/retweet/{retweetId}")
-    public Tweet removeRetweetByRetweetId(@PathVariable("tweetId")Long tweetId, @PathVariable("retweetId")Long retweetId) {
-        return null;
-    }
-
-    @PostMapping("/{tweetId}/retweet")
-    public Tweet retweetByTweetId(@PathVariable("tweetId")Long tweetId) {
-        return null;
-    }
-
     @PostMapping("/{tweetId}/comments")
     public Comment addCommentByTweetId(@PathVariable("tweetId")Long tweetId, @RequestBody Comment comment) {
         Tweet tweet = this.tweetService.findById(tweetId);
-        comment.setTweet(tweet);
+        List<Comment> comments = tweet.getComments();
+
+        comments.add(comment);
         this.commentService.save(comment);
+        this.tweetService.save(tweet);
         return comment;
     }
 

@@ -3,10 +3,15 @@ package com.techinwork.ggkush.controller;
 import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.entity.User;
 import com.techinwork.ggkush.entity.UserInteraction;
+import com.techinwork.ggkush.exception.TweetException;
+import com.techinwork.ggkush.exception.TweetNotFoundException;
+import com.techinwork.ggkush.exception.UserException;
+import com.techinwork.ggkush.exception.UserNotFoundException;
 import com.techinwork.ggkush.service.TweetService;
 import com.techinwork.ggkush.service.UserInteractionService;
 import com.techinwork.ggkush.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +29,11 @@ public class UserController {
 
     @GetMapping("/{userId}/tweets/{tweetId}")
     public Tweet findTweetById(@PathVariable("tweetId")Long tweetId) {
-        return this.tweetService.findById(tweetId);
+        try {
+            return this.tweetService.findById(tweetId);
+        } catch (RuntimeException e) {
+            throw new TweetNotFoundException();
+        }
     }
 
     @GetMapping("/{userId}/tweets")
@@ -34,7 +43,12 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public User findUserById(@PathVariable("userId")Long userId) {
-        return this.userService.findById(userId);
+        try {
+            return this.userService.findById(userId);
+        } catch (RuntimeException e) {
+            throw new UserNotFoundException();
+        }
+
     }
 
     @GetMapping
@@ -45,6 +59,9 @@ public class UserController {
     @PostMapping("/{userId}/tweets")
     public Tweet addTweetByUserId(@PathVariable("userId")Long userId, @RequestBody Tweet tweet) {
         User user = this.userService.findById(userId);
+
+        if (user == null) throw new UserNotFoundException();
+
         tweet.setUser(user);
         this.tweetService.save(tweet);
         return tweet;
@@ -58,6 +75,9 @@ public class UserController {
     @PatchMapping("/{userId}/tweets/{tweetId}/like")
     public Tweet likeTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
         Tweet tweet = this.tweetService.findById(tweetId);
+
+        if (tweet == null) throw new TweetNotFoundException();
+
         UserInteraction userInteraction = this.userInteractionService.findByIds(userId, tweetId);
 
         if (userInteraction == null) {
@@ -78,6 +98,9 @@ public class UserController {
     @PatchMapping("/{userId}/tweets/{tweetId}/dislike")
     public Tweet dislikeTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
         Tweet tweet = this.tweetService.findById(tweetId);
+
+        if (tweet == null) throw new TweetNotFoundException();
+
         UserInteraction userInteraction = this.userInteractionService.findByIds(userId, tweetId);
 
         if (userInteraction == null) {
@@ -98,6 +121,9 @@ public class UserController {
     @PatchMapping("/{userId}/tweets/{tweetId}/retweet")
     public Tweet retweetTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
         Tweet tweet = this.tweetService.findById(tweetId);
+
+        if (tweet == null) throw new TweetNotFoundException();
+
         UserInteraction userInteraction = this.userInteractionService.findByIds(userId, tweetId);
 
         if (userInteraction == null) {
@@ -114,6 +140,9 @@ public class UserController {
     @PatchMapping("/{userId}/tweets/{tweetId}/undo-retweet")
     public Tweet undoRetweetTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
         Tweet tweet = this.tweetService.findById(tweetId);
+
+        if (tweet == null) throw new TweetNotFoundException();
+
         UserInteraction userInteraction = this.userInteractionService.findByIds(userId, tweetId);
 
         if (userInteraction == null) {
@@ -130,6 +159,9 @@ public class UserController {
     @PatchMapping("/{userId}/tweets/{tweetId}")
     public Tweet patchTweetById(@PathVariable("tweetId")Long tweetId, @RequestBody String text) {
         Tweet tweet = this.tweetService.findById(tweetId);
+
+        if (tweet == null) throw new TweetNotFoundException();
+
         tweet.setText(text);
         this.tweetService.save(tweet);
 
@@ -137,7 +169,12 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}/tweets/{tweetId}")
-    public Tweet deleteTweetById(@PathVariable("tweetId")Long tweetId) {
+    public Tweet deleteTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
+        User user = this.userService.findById(userId);
+        Tweet tweet = this.tweetService.findById(tweetId);
+
+        if (tweet.getUser() != user) throw new UserException("Only who post the tweet can delete it.", HttpStatus.UNAUTHORIZED);
+
         return this.tweetService.delete(tweetId);
     }
 }
