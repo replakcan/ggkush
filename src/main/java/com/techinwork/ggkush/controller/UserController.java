@@ -19,6 +19,7 @@ import java.util.List;
 
 // TODO [Alper] change return values with response records
 
+@CrossOrigin(origins = "http://localhost:5173.com")
 @Validated
 @AllArgsConstructor
 @RestController
@@ -72,6 +73,19 @@ public class UserController {
     @PostMapping
     public User addUser(@RequestBody User user) {
         return this.userService.save(user);
+    }
+
+    @PatchMapping("/{userId}/tweets/{tweetId}")
+    public Tweet editTweet(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId, @RequestBody String text) {
+        Tweet tweet = this.tweetService.findById(tweetId);
+        User user = this.userService.findById(userId);
+
+        if (tweet.getUser() != user) throw new UserException("You can't edit a tweet that doesn't belong to you.", HttpStatus.UNAUTHORIZED);
+
+        tweet.setText(text);
+        this.tweetService.save(tweet);
+
+        return tweet;
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}/like")
@@ -158,24 +172,12 @@ public class UserController {
         return tweet;
     }
 
-    @PatchMapping("/{userId}/tweets/{tweetId}")
-    public Tweet patchTweetById(@PathVariable("tweetId")Long tweetId, @RequestBody String text) {
-        Tweet tweet = this.tweetService.findById(tweetId);
-
-        if (tweet == null) throw new TweetNotFoundException();
-
-        tweet.setText(text);
-        this.tweetService.save(tweet);
-
-        return tweet;
-    }
-
     @DeleteMapping("/{userId}/tweets/{tweetId}")
     public Tweet deleteTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
         User user = this.userService.findById(userId);
         Tweet tweet = this.tweetService.findById(tweetId);
 
-        if (tweet.getUser() != user) throw new UserException("Only who post the tweet can delete it.", HttpStatus.UNAUTHORIZED);
+        if (tweet.getUser() != user) throw new UserException("You can't delete a post that doesn't belong to you", HttpStatus.UNAUTHORIZED);
 
         return this.tweetService.delete(tweetId);
     }
