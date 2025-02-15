@@ -1,7 +1,6 @@
 package com.techinwork.ggkush.controller;
 
-import com.techinwork.ggkush.dto.security.RegisterResponse;
-import com.techinwork.ggkush.dto.security.RegistrationMember;
+import com.techinwork.ggkush.dto.RegisterResponse;
 import com.techinwork.ggkush.entity.User;
 import com.techinwork.ggkush.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
