@@ -5,7 +5,6 @@ import com.techinwork.ggkush.dto.UserResponse;
 import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.entity.User;
 import com.techinwork.ggkush.entity.UserInteraction;
-import com.techinwork.ggkush.exception.TweetException;
 import com.techinwork.ggkush.exception.TweetNotFoundException;
 import com.techinwork.ggkush.exception.UserException;
 import com.techinwork.ggkush.exception.UserNotFoundException;
@@ -67,7 +66,7 @@ public class UserController {
     public UserResponse findUserById(@PathVariable("userId")Long userId) {
         try {
             User user = this.userService.findById(userId);
-            return new UserResponse(user.getNickName(), user.getFirstName() + " " + user.getLastName(), user.getAge());
+            return new UserResponse(user.getId(), user.getNickName(), user.getFirstName() + " " + user.getLastName(), user.getAge());
         } catch (RuntimeException e) {
             throw new UserNotFoundException();
         }
@@ -80,7 +79,7 @@ public class UserController {
         Iterator<User> userIterator = users.iterator();
         while(userIterator.hasNext()) {
             User currentUser = userIterator.next();
-            responses.add(new UserResponse(currentUser.getNickName(), currentUser.getFirstName() + " " + currentUser.getLastName() ,currentUser.getAge()));
+            responses.add(new UserResponse(currentUser.getId(), currentUser.getNickName(), currentUser.getFirstName() + " " + currentUser.getLastName() ,currentUser.getAge()));
         }
         return responses;
     }
@@ -157,7 +156,7 @@ public class UserController {
             return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
         }
 
-        Integer votes = tweet.getVotes();
+        int votes = tweet.getVotes();
         userInteraction.setLike(false);
         userInteraction.setDislike(true);
         tweet.setVotes(votes - 1);

@@ -1,4 +1,4 @@
 package com.techinwork.ggkush.dto;
 
-public record UserResponse(String nickName, String userName, int age) {
+public record UserResponse(Long id, String nickName, String userName, int age) {
 }
