@@ -2,10 +2,11 @@ package com.techinwork.ggkush.service;
 
 import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.entity.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
 
-public interface UserService {
+public interface UserService extends UserDetailsService {
 
     List<User> findAll();
     User findById(Long userId);

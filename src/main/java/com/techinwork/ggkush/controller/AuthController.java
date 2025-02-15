@@ -1,9 +1,9 @@
-package com.techinwork.ggkush.controller.security;
+package com.techinwork.ggkush.controller;
 
 import com.techinwork.ggkush.dto.security.RegisterResponse;
 import com.techinwork.ggkush.dto.security.RegistrationMember;
-import com.techinwork.ggkush.entity.security.Member;
-import com.techinwork.ggkush.service.security.AuthenticationService;
+import com.techinwork.ggkush.entity.User;
+import com.techinwork.ggkush.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,8 +22,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public RegisterResponse register(@RequestBody RegistrationMember registrationMember) {
-        Member createdMember = authenticationService.register(registrationMember.email(), registrationMember.password());
-        return new RegisterResponse(createdMember.getEmail(), "kayıt başarılı bir şekilde gerçekleşti.");
+    public RegisterResponse register(@RequestBody User user) {
+        User createdUser = authenticationService.register(user.getEmail(), user.getPassword(), user.getFirstName(), user.getLastName(), user.getNickName(), user.getAge());
+        return new RegisterResponse(createdUser.getEmail(), "Registration successful!");
     }
 }

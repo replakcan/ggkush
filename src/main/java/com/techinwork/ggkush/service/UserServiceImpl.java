@@ -2,8 +2,11 @@ package com.techinwork.ggkush.service;
 
 import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.entity.User;
+import com.techinwork.ggkush.exception.UserNotFoundException;
 import com.techinwork.ggkush.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -49,5 +52,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Tweet> findAllUserTweets(Long userId) {
         return this.userRepository.findAllUserTweets(userId);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("No valid user"));
     }
 }
