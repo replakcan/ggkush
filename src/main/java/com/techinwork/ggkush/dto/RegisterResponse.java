@@ -1,4 +1,4 @@
-package com.techinwork.ggkush.dto.security;
+package com.techinwork.ggkush.dto;
 
 public record RegisterResponse(String email, String message) {
 }
