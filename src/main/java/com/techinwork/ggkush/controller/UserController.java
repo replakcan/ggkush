@@ -8,11 +8,13 @@ import com.techinwork.ggkush.entity.UserInteraction;
 import com.techinwork.ggkush.exception.TweetNotFoundException;
 import com.techinwork.ggkush.exception.UserException;
 import com.techinwork.ggkush.exception.UserNotFoundException;
+import com.techinwork.ggkush.repository.IAuthenticationFacade;
 import com.techinwork.ggkush.service.TweetService;
 import com.techinwork.ggkush.service.UserInteractionService;
 import com.techinwork.ggkush.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,7 @@ import java.util.List;
 
 // TODO [Alper] change return values with response records
 
-@CrossOrigin(origins = "http://localhost:5173.com")
+@CrossOrigin(origins = "http://localhost:5173")
 @Validated
 @AllArgsConstructor
 @RestController
@@ -32,6 +34,7 @@ public class UserController {
     private UserService userService;
     private TweetService tweetService;
     private UserInteractionService userInteractionService;
+    private IAuthenticationFacade authenticationFacade;
 
     @GetMapping("/{userId}/tweets/{tweetId}")
     public TweetResponse findTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
@@ -86,9 +89,16 @@ public class UserController {
 
     @PostMapping("/{userId}/tweets")
     public TweetResponse addTweetByUserId(@PathVariable("userId")Long userId, @RequestBody Tweet tweet) {
+        User user = userService.findById(userId);
         if (userService.findById(userId) == null) throw new UserNotFoundException();
 
-        User user = this.userService.findById(userId);
+        Authentication authentication = this.authenticationFacade.getAuthentication();
+
+        String authEmail = authentication.getName();
+        User authUser = this.userService.findByEmail(authEmail);
+        if (authUser != user) {
+            throw new UserException("chill bro this is not your account", HttpStatus.FORBIDDEN);
+        }
 
         tweet.setUser(user);
         this.tweetService.save(tweet);
@@ -97,15 +107,22 @@ public class UserController {
 
     @PatchMapping("/{userId}/tweets/{tweetId}")
     public TweetResponse editTweet(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId, @RequestBody String text) {
-        Tweet tweet = this.tweetService.findById(tweetId);
-        User user = this.userService.findById(userId);
 
-        if (tweet.getUser() != user) throw new UserException("You can't edit a tweet that doesn't belong to you.", HttpStatus.UNAUTHORIZED);
+        if (this.userService.findById(userId) == null) throw new UserNotFoundException();
+
+        Authentication authentication = authenticationFacade.getAuthentication();
+
+        String authEmail = authentication.getName();
+        User authUser = this.userService.findByEmail(authEmail);
+        Tweet tweet = this.tweetService.findById(tweetId);
+        User postUser = tweet.getUser();
+
+        if (postUser != authUser) throw new UserException("You can't edit a tweet that doesn't belong to you.", HttpStatus.FORBIDDEN);
 
         tweet.setText(text);
         this.tweetService.save(tweet);
 
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), postUser.getNickName(), tweet.getCreatedAt());
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}/like")
@@ -123,14 +140,16 @@ public class UserController {
             userInteraction.setUserId(userId);
             userInteraction.setTweetId(tweetId);
         }
+
         if (userInteraction.isLike()) {
             return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
         }
 
         Integer votes = tweet.getVotes();
+        tweet.setVotes(userInteraction.isDislike() ? votes + 2 : votes + 1);
         userInteraction.setLike(true);
         userInteraction.setDislike(false);
-        tweet.setVotes(votes + 1);
+
         this.userInteractionService.save(userInteraction);
         this.tweetService.save(tweet);
         return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
@@ -157,9 +176,10 @@ public class UserController {
         }
 
         int votes = tweet.getVotes();
+        tweet.setVotes(userInteraction.isLike() ? votes - 2 : votes - 1);
         userInteraction.setLike(false);
         userInteraction.setDislike(true);
-        tweet.setVotes(votes - 1);
+
         this.userInteractionService.save(userInteraction);
         this.tweetService.save(tweet);
         return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
@@ -210,9 +230,17 @@ public class UserController {
     @DeleteMapping("/{userId}/tweets/{tweetId}")
     public TweetResponse deleteTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {
         User user = this.userService.findById(userId);
-        Tweet tweet = this.tweetService.findById(tweetId);
+        if (user == null) throw new UserNotFoundException();
 
-        if (tweet.getUser() != user) throw new UserException("You can't delete a post that doesn't belong to you", HttpStatus.UNAUTHORIZED);
+        Tweet tweet = this.tweetService.findById(tweetId);
+        if (tweet == null) throw new TweetNotFoundException();
+
+        Authentication authentication = authenticationFacade.getAuthentication();
+
+        String authEmail = authentication.getName();
+        User authUser = this.userService.findByEmail(authEmail);
+
+        if (authUser != user) throw new UserException("You can't delete a post that doesn't belong to you", HttpStatus.FORBIDDEN);
 
         return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
     }
