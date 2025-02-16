@@ -1,0 +1,4 @@
+SELECT * FROM ggkush.member;
+SELECT * FROM ggkush.role;
+SELECT * FROM ggkush.account;
+SELECT * FROM ggkush.member_role;
