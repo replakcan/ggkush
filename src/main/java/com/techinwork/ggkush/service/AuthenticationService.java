@@ -1,10 +1,13 @@
 package com.techinwork.ggkush.service;
 
+import com.techinwork.ggkush.dto.LoginRequest;
+import com.techinwork.ggkush.dto.LoginResponse;
 import com.techinwork.ggkush.entity.Role;
 import com.techinwork.ggkush.entity.User;
 import com.techinwork.ggkush.repository.RoleRepository;
 import com.techinwork.ggkush.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,21 @@ public class AuthenticationService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public LoginResponse loginControl(LoginRequest loginRequest) {
+        Optional<User> user = userRepository.findByEmail(loginRequest.email());
+
+        if (user.isPresent()) {
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            if (!encoder.matches(loginRequest.password(), user.get().getPassword())) {
+                throw new RuntimeException("Invalid password");
+            } else {
+                return new LoginResponse(loginRequest.email(), loginRequest.password());
+            }
+        } else {
+            throw new RuntimeException("Invalid email address");
+        }
     }
 
     public User register(String email, String password, String firstName, String lastName, String nickName, Integer age) {
