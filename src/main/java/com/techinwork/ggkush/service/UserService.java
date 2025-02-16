@@ -7,9 +7,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import java.util.List;
 
 public interface UserService extends UserDetailsService {
-
     List<User> findAll();
     User findById(Long userId);
+    User findByEmail(String email);
     User save(User user);
     User delete(Long userId);
     List<Tweet> findAllUserTweets(Long userId);
