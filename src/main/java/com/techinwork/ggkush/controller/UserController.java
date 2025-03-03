@@ -13,6 +13,7 @@ import com.techinwork.ggkush.service.TweetService;
 import com.techinwork.ggkush.service.UserInteractionService;
 import com.techinwork.ggkush.service.UserService;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -35,6 +36,17 @@ public class UserController {
     private TweetService tweetService;
     private UserInteractionService userInteractionService;
     private IAuthenticationFacade authenticationFacade;
+    private static @NotNull List<CommentResponse> getCommentResponses(Tweet tweet) {
+        List<CommentResponse> commentResponseList = new ArrayList<>();
+        List<Comment> comments = tweet.getComments();
+        Iterator<Comment> commentIterator = comments.iterator();
+        while(commentIterator.hasNext()) {
+            Comment currentComment = commentIterator.next();
+
+            commentResponseList.add(new CommentResponse(currentComment.getId(), currentComment.getText(), currentComment.getVotes(), currentComment.getUser().getNickName(), currentComment.getCreatedAt()));
+        }
+        return commentResponseList;
+    }
 
     @GetMapping("/{userId}/tweets/{tweetId}")
     public TweetResponse findTweetById(@PathVariable("userId")Long userId, @PathVariable("tweetId")Long tweetId) {

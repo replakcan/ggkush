@@ -5,6 +5,7 @@ import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.service.CommentService;
 import com.techinwork.ggkush.service.TweetService;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +19,17 @@ public class TweetController {
 
     private TweetService tweetService;
     private CommentService commentService;
+    private static @NotNull List<CommentResponse> getCommentResponses(Tweet tweet) {
+        List<CommentResponse> commentResponseList = new ArrayList<>();
+        List<Comment> comments = tweet.getComments();
+        Iterator<Comment> commentIterator = comments.iterator();
+        while(commentIterator.hasNext()) {
+            Comment currentComment = commentIterator.next();
+
+            commentResponseList.add(new CommentResponse(currentComment.getId(), currentComment.getText(), currentComment.getVotes(), currentComment.getUser().getNickName(), currentComment.getCreatedAt()));
+        }
+        return commentResponseList;
+    }
 
     @GetMapping
     public List<Tweet> findAllTweets() {
