@@ -2,7 +2,6 @@ package com.techinwork.ggkush.service;
 
 import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.entity.User;
-import com.techinwork.ggkush.exception.UserNotFoundException;
 import com.techinwork.ggkush.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
