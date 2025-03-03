@@ -1,7 +1,9 @@
 package com.techinwork.ggkush.controller;
 
+import com.techinwork.ggkush.dto.CommentResponse;
 import com.techinwork.ggkush.dto.TweetResponse;
 import com.techinwork.ggkush.dto.UserResponse;
+import com.techinwork.ggkush.entity.Comment;
 import com.techinwork.ggkush.entity.Tweet;
 import com.techinwork.ggkush.entity.User;
 import com.techinwork.ggkush.entity.UserInteraction;
@@ -23,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-// TODO [Alper] change return values with response records
-
 @CrossOrigin(origins = "http://localhost:5173")
 @Validated
 @AllArgsConstructor
@@ -36,6 +36,7 @@ public class UserController {
     private TweetService tweetService;
     private UserInteractionService userInteractionService;
     private IAuthenticationFacade authenticationFacade;
+
     private static @NotNull List<CommentResponse> getCommentResponses(Tweet tweet) {
         List<CommentResponse> commentResponseList = new ArrayList<>();
         List<Comment> comments = tweet.getComments();
@@ -55,7 +56,8 @@ public class UserController {
         try {
             User user = this.userService.findById(userId);
             Tweet tweet = this.tweetService.findById(tweetId);
-            return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+
+            return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
         } catch (RuntimeException e) {
             throw new TweetNotFoundException();
         }
@@ -70,7 +72,7 @@ public class UserController {
         Iterator<Tweet> iterator = tweets.iterator();
         while(iterator.hasNext()) {
             Tweet currentTweet = iterator.next();
-            TweetResponse currentResponse = new TweetResponse(currentTweet.getId(), currentTweet.getText(), currentTweet.getVotes(), currentTweet.getUser().getNickName(), currentTweet.getCreatedAt());
+            TweetResponse currentResponse = new TweetResponse(currentTweet.getId(), currentTweet.getText(), currentTweet.getVotes(), currentTweet.getUser().getNickName(), currentTweet.getCreatedAt(), getCommentResponses(currentTweet));
 
             tweetResponses.add(currentResponse);
         }
@@ -102,7 +104,7 @@ public class UserController {
     @PostMapping("/{userId}/tweets")
     public TweetResponse addTweetByUserId(@PathVariable("userId")Long userId, @RequestBody Tweet tweet) {
         User user = userService.findById(userId);
-        if (userService.findById(userId) == null) throw new UserNotFoundException();
+        if (user == null) throw new UserNotFoundException();
 
         Authentication authentication = this.authenticationFacade.getAuthentication();
 
@@ -112,9 +114,10 @@ public class UserController {
             throw new UserException("chill bro this is not your account", HttpStatus.FORBIDDEN);
         }
 
+        List<CommentResponse> commentList = new ArrayList<>();
         tweet.setUser(user);
         this.tweetService.save(tweet);
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), commentList);
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}")
@@ -130,11 +133,11 @@ public class UserController {
         User postUser = tweet.getUser();
 
         if (postUser != authUser) throw new UserException("You can't edit a tweet that doesn't belong to you.", HttpStatus.FORBIDDEN);
-
+        
         tweet.setText(text);
         this.tweetService.save(tweet);
 
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), postUser.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), postUser.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}/like")
@@ -154,7 +157,7 @@ public class UserController {
         }
 
         if (userInteraction.isLike()) {
-            return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+            return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
         }
 
         Integer votes = tweet.getVotes();
@@ -164,7 +167,7 @@ public class UserController {
 
         this.userInteractionService.save(userInteraction);
         this.tweetService.save(tweet);
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}/dislike")
@@ -184,7 +187,7 @@ public class UserController {
         }
 
         if (userInteraction.isDislike()) {
-            return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+            return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
         }
 
         int votes = tweet.getVotes();
@@ -194,7 +197,7 @@ public class UserController {
 
         this.userInteractionService.save(userInteraction);
         this.tweetService.save(tweet);
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}/retweet")
@@ -215,7 +218,7 @@ public class UserController {
         userInteraction.setRetweet(true);
 
         this.userInteractionService.save(userInteraction);
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
     }
 
     @PatchMapping("/{userId}/tweets/{tweetId}/undo-retweet")
@@ -236,7 +239,7 @@ public class UserController {
         userInteraction.setRetweet(false);
 
         this.userInteractionService.save(userInteraction);
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
     }
 
     @DeleteMapping("/{userId}/tweets/{tweetId}")
@@ -254,6 +257,6 @@ public class UserController {
 
         if (authUser != user) throw new UserException("You can't delete a post that doesn't belong to you", HttpStatus.FORBIDDEN);
 
-        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt());
+        return new TweetResponse(tweet.getId(), tweet.getText(), tweet.getVotes(), user.getNickName(), tweet.getCreatedAt(), getCommentResponses(tweet));
     }
 }
