@@ -63,6 +63,10 @@ public class User implements UserDetails {
     @JsonIgnore
     private List<Tweet> tweets;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Comment> comments;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles;
